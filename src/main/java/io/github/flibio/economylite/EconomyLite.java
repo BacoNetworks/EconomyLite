@@ -15,7 +15,6 @@ import io.github.flibio.economylite.commands.admin.AddCommand;
 import io.github.flibio.economylite.commands.admin.EconCommand;
 import io.github.flibio.economylite.commands.RefreshCommand;
 import io.github.flibio.economylite.commands.admin.RemoveCommand;
-import io.github.flibio.economylite.commands.admin.SetAllCommand;
 import io.github.flibio.economylite.commands.admin.SetCommand;
 import io.github.flibio.economylite.commands.balance.BalTopCommand;
 import io.github.flibio.economylite.commands.balance.BalanceCommand;
@@ -137,7 +136,6 @@ public class EconomyLite {
                 new BalanceCommand(),
                 new EconCommand(),
                 new SetCommand(),
-                new SetAllCommand(),
                 new RemoveCommand(),
                 new AddCommand(),
                 new PayCommand(),

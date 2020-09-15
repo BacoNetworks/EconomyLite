@@ -29,7 +29,6 @@ public class EconCommand extends BaseCommandExecutor<CommandSource> {
     @Override
     public void run(CommandSource src, CommandContext args) {
         src.sendMessage(messageStorage.getMessage("command.usage", "command", "/econ", "subcommands", "add | set | remove <player> <amount>"));
-        src.sendMessage(messageStorage.getMessage("command.usage", "command", "/econ", "subcommands", "setall <amount>"));
     }
 
 }
