@@ -3,9 +3,8 @@
  */
 package io.github.flibio.economylite.commands;
 
-import io.github.flibio.economylite.TextUtils;
-
 import io.github.flibio.economylite.EconomyLite;
+import io.github.flibio.economylite.TextUtils;
 import io.github.flibio.utils.commands.AsyncCommand;
 import io.github.flibio.utils.commands.BaseCommandExecutor;
 import io.github.flibio.utils.commands.Command;
@@ -23,6 +22,7 @@ import org.spongepowered.api.service.economy.EconomyService;
 import org.spongepowered.api.service.economy.account.UniqueAccount;
 import org.spongepowered.api.service.economy.transaction.ResultType;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.format.TextColors;
 
 import java.math.BigDecimal;
 import java.util.Locale;
@@ -46,38 +46,37 @@ public class PayCommand extends BaseCommandExecutor<Player> {
     public void run(Player src, CommandContext args) {
         if (args.getOne("player").isPresent() && args.getOne("amount").isPresent()) {
             BigDecimal amount = BigDecimal.valueOf(args.<Double>getOne("amount").get());
+            double taxpercent = EconomyLite.getConfigManager().getValue(Double.class, "tax-percentage").orElse(15.0);
+            double taxed = amount.doubleValue() * (taxpercent / 100.0f);
             if (amount.doubleValue() <= 0) {
                 src.sendMessage(messageStorage.getMessage("command.pay.invalid"));
-            } else {
+            } else if (args.<User>getOne("player").isPresent()) {
                 User target = args.<User>getOne("player").get();
-                if (!EconomyLite.getConfigManager().getValue(Boolean.class, false, "confirm-offline-payments") || target.isOnline()) {
-                    // Complete the payment
-                    pay(target, amount, src);
-                } else {
-                    src.sendMessage(messageStorage.getMessage("command.pay.confirm", "player", target.getName()));
-                    // Check if they want to still pay
-                    src.sendMessage(TextUtils.yesOrNo(c -> {
-                        pay(target, amount, src);
-                    }, c -> {
-                        src.sendMessage(messageStorage.getMessage("command.pay.confirmno", "player", target.getName()));
-                    }));
-                }
-
+                src.sendMessage(Text.of(TextColors.WHITE, " You are about to send ", TextColors.GOLD, String.format(Locale.ENGLISH, "%,.2f", amount) + " " + ecoService.getDefaultCurrency().getPluralDisplayName().toPlain(), TextColors.WHITE, " to ", TextColors.GOLD,
+                        target.getName(), TextColors.WHITE, " and are being taxed an additional ", TextColors.GOLD, String.format(Locale.ENGLISH, "%,.2f", taxed) + " " + ecoService.getDefaultCurrency().getPluralDisplayName().toPlain(), TextColors.WHITE, " for the transfer. As such the total amount being deducted from " +
+                                "your account will be ",  TextColors.GOLD, String.format(Locale.ENGLISH, "%,.2f", amount.doubleValue() + taxed) + " " + ecoService.getDefaultCurrency().getPluralDisplayName().toPlain(),
+                        TextColors.WHITE, ". Please confirm by clicking below!"));
+                src.sendMessage(TextUtils.yesOrNo(c -> {
+                    pay(target, amount, src, taxed);
+                }, c -> {
+                    src.sendMessage(messageStorage.getMessage("command.pay.confirmno", "player", target.getName()));
+                }));
             }
         } else {
             src.sendMessage(messageStorage.getMessage("command.error"));
         }
     }
-
-    private void pay(User target, BigDecimal amount, Player src) {
+    private void pay(User target, BigDecimal amount, Player src, double taxed) {
         String targetName = target.getName();
         if (!target.getUniqueId().equals(src.getUniqueId())) {
             Optional<UniqueAccount> uOpt = ecoService.getOrCreateAccount(src.getUniqueId());
             Optional<UniqueAccount> tOpt = ecoService.getOrCreateAccount(target.getUniqueId());
             if (uOpt.isPresent() && tOpt.isPresent()) {
-                if (uOpt.get()
-                        .transfer(tOpt.get(), ecoService.getDefaultCurrency(), amount, Cause.of(EventContext.empty(), (EconomyLite.getInstance())))
-                        .getResult().equals(ResultType.SUCCESS)) {
+                if(uOpt.get().getBalance(ecoService.getDefaultCurrency()).doubleValue() < amount.doubleValue() + taxed){
+                    src.sendMessage(Text.of(TextColors.RED, "You don't have enough money to cover the payment (" + amount.doubleValue(), ") and the tax (" + taxed + ")!"));
+                    return;
+                }
+                if (uOpt.get().withdraw(ecoService.getDefaultCurrency(),BigDecimal.valueOf(taxed), Cause.of(EventContext.empty(), (EconomyLite.getInstance()))).getResult().equals(ResultType.SUCCESS) && uOpt.get().transfer(tOpt.get(), ecoService.getDefaultCurrency(), amount, Cause.of(EventContext.empty(), (EconomyLite.getInstance()))).getResult().equals(ResultType.SUCCESS)) {
                     Text label = ecoService.getDefaultCurrency().getPluralDisplayName();
                     if (amount.equals(BigDecimal.ONE)) {
                         label = ecoService.getDefaultCurrency().getDisplayName();
@@ -100,5 +99,4 @@ public class PayCommand extends BaseCommandExecutor<Player> {
             src.sendMessage(messageStorage.getMessage("command.pay.notyou"));
         }
     }
-
 }

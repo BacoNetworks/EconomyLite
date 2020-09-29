@@ -14,7 +14,7 @@ public class TextUtils {
 
     public static Text yesOrNo(Consumer<CommandSource> yes, Consumer<CommandSource> no) {
         Text accept =
-                Text.of(TextColors.DARK_GRAY, "[", TextColors.GREEN, "YES", TextColors.DARK_GRAY, "]").toBuilder()
+                Text.of(TextColors.DARK_GRAY, " [", TextColors.GREEN, "YES", TextColors.DARK_GRAY, "]").toBuilder()
                         .onHover(TextActions.showText(Text.of(TextColors.GREEN, "Yes!")))
                         .onClick(TextActions.executeCallback(yes))
                         .build();
