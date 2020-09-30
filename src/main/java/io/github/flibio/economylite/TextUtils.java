@@ -14,13 +14,13 @@ public class TextUtils {
 
     public static Text yesOrNo(Consumer<CommandSource> yes, Consumer<CommandSource> no) {
         Text accept =
-                Text.of(TextColors.DARK_GRAY, " [", TextColors.GREEN, "YES", TextColors.DARK_GRAY, "]").toBuilder()
-                        .onHover(TextActions.showText(Text.of(TextColors.GREEN, "Yes!")))
+                Text.of(TextColors.DARK_GRAY, " [", TextColors.GREEN, "Confirm", TextColors.DARK_GRAY, "]").toBuilder()
+                        .onHover(TextActions.showText(Text.of(TextColors.GREEN, "Confirm!")))
                         .onClick(TextActions.executeCallback(yes))
                         .build();
         Text deny =
-                Text.of(TextColors.DARK_GRAY, "[", TextColors.RED, "NO", TextColors.DARK_GRAY, "]").toBuilder()
-                        .onHover(TextActions.showText(Text.of(TextColors.RED, "No!")))
+                Text.of(TextColors.DARK_GRAY, "[", TextColors.RED, "Deny", TextColors.DARK_GRAY, "]").toBuilder()
+                        .onHover(TextActions.showText(Text.of(TextColors.RED, "Deny!")))
                         .onClick(TextActions.executeCallback(no))
                         .build();
         return accept.toBuilder().append(Text.of(" "), deny).build();
