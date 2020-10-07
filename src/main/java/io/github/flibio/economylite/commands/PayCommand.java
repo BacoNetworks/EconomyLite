@@ -27,6 +27,7 @@ import org.spongepowered.api.text.format.TextColors;
 import java.math.BigDecimal;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Random;
 
 @AsyncCommand
 @Command(aliases = {"pay"}, permission = "economylite.pay")
@@ -46,8 +47,8 @@ public class PayCommand extends BaseCommandExecutor<Player> {
     public void run(Player src, CommandContext args) {
         if (args.getOne("player").isPresent() && args.getOne("amount").isPresent()) {
             BigDecimal amount = BigDecimal.valueOf(args.<Double>getOne("amount").get());
-            if(amount.intValue() < 1){
-                src.sendMessage(Text.of(TextColors.RED, "You can't send less than 1 " +  ecoService.getDefaultCurrency().getPluralDisplayName().toPlain() + "!"));
+            if (amount.intValue() < 1) {
+                src.sendMessage(Text.of(TextColors.RED, "You can't send less than 1 " + ecoService.getDefaultCurrency().getPluralDisplayName().toPlain() + "!"));
                 return;
             }
             double taxpercent = EconomyLite.getConfigManager().getValue(Double.class, "tax-percentage").orElse(15.0);
@@ -58,7 +59,7 @@ public class PayCommand extends BaseCommandExecutor<Player> {
                 User target = args.<User>getOne("player").get();
                 src.sendMessage(Text.of(TextColors.WHITE, " You are about to send ", TextColors.GOLD, String.format(Locale.ENGLISH, "%,.2f", amount) + " " + ecoService.getDefaultCurrency().getPluralDisplayName().toPlain(), TextColors.WHITE, " to ", TextColors.GOLD,
                         target.getName(), TextColors.WHITE, " and are being taxed an additional ", TextColors.GOLD, String.format(Locale.ENGLISH, "%,.2f", taxed) + " " + ecoService.getDefaultCurrency().getPluralDisplayName().toPlain(), TextColors.WHITE, " for the transfer. As such the total amount being deducted from " +
-                                "your account will be ",  TextColors.GOLD, String.format(Locale.ENGLISH, "%,.2f", amount.doubleValue() + taxed) + " " + ecoService.getDefaultCurrency().getPluralDisplayName().toPlain(),
+                                "your account will be ", TextColors.GOLD, String.format(Locale.ENGLISH, "%,.2f", amount.doubleValue() + taxed) + " " + ecoService.getDefaultCurrency().getPluralDisplayName().toPlain(),
                         TextColors.WHITE, ". Please confirm by clicking below!"));
                 src.sendMessage(TextUtils.yesOrNo(c -> {
                     pay(target, amount, src, taxed);
@@ -70,17 +71,18 @@ public class PayCommand extends BaseCommandExecutor<Player> {
             src.sendMessage(messageStorage.getMessage("command.error"));
         }
     }
+
     private void pay(User target, BigDecimal amount, Player src, double taxed) {
         String targetName = target.getName();
         if (!target.getUniqueId().equals(src.getUniqueId())) {
             Optional<UniqueAccount> uOpt = ecoService.getOrCreateAccount(src.getUniqueId());
             Optional<UniqueAccount> tOpt = ecoService.getOrCreateAccount(target.getUniqueId());
             if (uOpt.isPresent() && tOpt.isPresent()) {
-                if(uOpt.get().getBalance(ecoService.getDefaultCurrency()).doubleValue() < amount.doubleValue() + taxed){
+                if (uOpt.get().getBalance(ecoService.getDefaultCurrency()).doubleValue() < amount.doubleValue() + taxed) {
                     src.sendMessage(Text.of(TextColors.RED, "You don't have enough money to cover the payment (" + amount.doubleValue(), ") and the tax (" + taxed + ")!"));
                     return;
                 }
-                if (uOpt.get().withdraw(ecoService.getDefaultCurrency(),BigDecimal.valueOf(taxed), Cause.of(EventContext.empty(), (EconomyLite.getInstance()))).getResult().equals(ResultType.SUCCESS) && uOpt.get().transfer(tOpt.get(), ecoService.getDefaultCurrency(), amount, Cause.of(EventContext.empty(), (EconomyLite.getInstance()))).getResult().equals(ResultType.SUCCESS)) {
+                if (uOpt.get().withdraw(ecoService.getDefaultCurrency(), BigDecimal.valueOf(taxed), Cause.of(EventContext.empty(), (EconomyLite.getInstance()))).getResult().equals(ResultType.SUCCESS) && uOpt.get().transfer(tOpt.get(), ecoService.getDefaultCurrency(), amount, Cause.of(EventContext.empty(), (EconomyLite.getInstance()))).getResult().equals(ResultType.SUCCESS)) {
                     Text label = ecoService.getDefaultCurrency().getPluralDisplayName();
                     if (amount.equals(BigDecimal.ONE)) {
                         label = ecoService.getDefaultCurrency().getDisplayName();
@@ -93,6 +95,14 @@ public class PayCommand extends BaseCommandExecutor<Player> {
                                 String.format(Locale.ENGLISH, "%,.2f", amount) + " " + curLabel.toPlain(), "sender",
                                 uOpt.get().getDisplayName().toPlain()));
                     });
+                    int lottery = new Random().nextInt(50 - 10) + 10;
+                    if (taxed < 10) {
+                        lottery = (int) taxed;
+                    }
+                    if (lottery > 1 && lottery <= taxed) {
+                        src.sendMessage(Text.builder("Due to you paying " + targetName + " " + lottery + " BacoBits were added to the lottery pot.").color(TextColors.GREEN).build());
+                        Sponge.getCommandManager().process(Sponge.getServer().getConsole(), "lot addpot " + lottery);
+                    }
                 } else {
                     src.sendMessage(messageStorage.getMessage("command.pay.failed", "target", targetName));
                 }
