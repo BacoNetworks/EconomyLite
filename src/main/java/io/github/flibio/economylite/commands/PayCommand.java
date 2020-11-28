@@ -57,6 +57,10 @@ public class PayCommand extends BaseCommandExecutor<Player> {
                 src.sendMessage(messageStorage.getMessage("command.pay.invalid"));
             } else if (args.<User>getOne("player").isPresent()) {
                 User target = args.<User>getOne("player").get();
+                if(target.hasPermission("economylite.blocpayments")){
+                    src.sendMessage(Text.of(TextColors.RED, "This user is blocked from recieving payments. Most likely due to breaking rule 10."));
+                    return;
+                }
                 src.sendMessage(Text.of(TextColors.WHITE, " You are about to send ", TextColors.GOLD, String.format(Locale.ENGLISH, "%,.2f", amount) + " " + ecoService.getDefaultCurrency().getPluralDisplayName().toPlain(), TextColors.WHITE, " to ", TextColors.GOLD,
                         target.getName(), TextColors.WHITE, " and are being taxed an additional ", TextColors.GOLD, String.format(Locale.ENGLISH, "%,.2f", taxed) + " " + ecoService.getDefaultCurrency().getPluralDisplayName().toPlain(), TextColors.WHITE, " for the transfer. As such the total amount being deducted from " +
                                 "your account will be ", TextColors.GOLD, String.format(Locale.ENGLISH, "%,.2f", amount.doubleValue() + taxed) + " " + ecoService.getDefaultCurrency().getPluralDisplayName().toPlain(),
