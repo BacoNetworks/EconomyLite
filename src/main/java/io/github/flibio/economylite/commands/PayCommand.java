@@ -4,6 +4,7 @@
 package io.github.flibio.economylite.commands;
 
 import io.github.flibio.economylite.EconomyLite;
+import io.github.flibio.economylite.TaxHelper;
 import io.github.flibio.economylite.TextUtils;
 import io.github.flibio.utils.commands.AsyncCommand;
 import io.github.flibio.utils.commands.BaseCommandExecutor;
@@ -57,16 +58,17 @@ public class PayCommand extends BaseCommandExecutor<Player> {
                 src.sendMessage(messageStorage.getMessage("command.pay.invalid"));
             } else if (args.<User>getOne("player").isPresent()) {
                 User target = args.<User>getOne("player").get();
+                double finalTaxed = TaxHelper.GetFinalTax(src,taxed);
                 if(target.hasPermission("economylite.blocpayments")){
                     src.sendMessage(Text.of(TextColors.RED, "This user is blocked from recieving payments. Most likely due to breaking rule 10."));
                     return;
                 }
                 src.sendMessage(Text.of(TextColors.WHITE, " You are about to send ", TextColors.GOLD, String.format(Locale.ENGLISH, "%,.2f", amount) + " " + ecoService.getDefaultCurrency().getPluralDisplayName().toPlain(), TextColors.WHITE, " to ", TextColors.GOLD,
-                        target.getName(), TextColors.WHITE, " and are being taxed an additional ", TextColors.GOLD, String.format(Locale.ENGLISH, "%,.2f", taxed) + " " + ecoService.getDefaultCurrency().getPluralDisplayName().toPlain(), TextColors.WHITE, " for the transfer. As such the total amount being deducted from " +
-                                "your account will be ", TextColors.GOLD, String.format(Locale.ENGLISH, "%,.2f", amount.doubleValue() + taxed) + " " + ecoService.getDefaultCurrency().getPluralDisplayName().toPlain(),
+                        target.getName(), TextColors.WHITE, " and are being taxed an additional ", TextColors.GOLD, String.format(Locale.ENGLISH, "%,.2f", finalTaxed) + " " + ecoService.getDefaultCurrency().getPluralDisplayName().toPlain(), TextColors.WHITE, " for the transfer. As such the total amount being deducted from " +
+                                "your account will be ", TextColors.GOLD, String.format(Locale.ENGLISH, "%,.2f", amount.doubleValue() + finalTaxed) + " " + ecoService.getDefaultCurrency().getPluralDisplayName().toPlain(),
                         TextColors.WHITE, ". Please confirm by clicking below!"));
                 src.sendMessage(TextUtils.yesOrNo(c -> {
-                    pay(target, amount, src, taxed);
+                    pay(target, amount, src, finalTaxed);
                 }, c -> {
                     src.sendMessage(messageStorage.getMessage("command.pay.confirmno", "player", target.getName()));
                 }));
@@ -99,12 +101,17 @@ public class PayCommand extends BaseCommandExecutor<Player> {
                                 String.format(Locale.ENGLISH, "%,.2f", amount) + " " + curLabel.toPlain(), "sender",
                                 uOpt.get().getDisplayName().toPlain()));
                     });
+                    String rank = TaxHelper.DonorRank(src);
+                    if(!rank.isEmpty()){
+                        src.sendMessage(Text.of(TextColors.GREEN, "You just saved ", TextColors.GOLD, String.format(Locale.ENGLISH, "%,.2f", TaxHelper.GetAmountSaved(rank,taxed)), TextColors.GREEN, " BacoBits due to being a ", TextColors.GOLD, rank, TextColors.GREEN,
+                                " rank owner!"));
+                    }
                     int lottery = new Random().nextInt(50 - 10) + 10;
                     if (taxed < 10) {
                         lottery = (int) taxed;
                     }
                     if (lottery > 1 && lottery <= taxed) {
-                        src.sendMessage(Text.builder("Due to you paying " + targetName + " " + lottery + " BacoBits were added to the lottery pot.").color(TextColors.GREEN).build());
+                        src.sendMessage(Text.of(TextColors.GREEN, "Due to you paying ", TextColors.GOLD, targetName, TextColors.GOLD, " " + lottery, TextColors.GREEN, " BacoBits were added to the lottery pot!"));
                         Sponge.getCommandManager().process(Sponge.getServer().getConsole(), "lot addpot " + lottery);
                     }
                 } else {

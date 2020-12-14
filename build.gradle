@@ -2,7 +2,6 @@ plugins {
     id 'java'
     id 'eclipse'
     id 'maven'
-    id 'com.github.hierynomus.license' version '0.12.1'
     id 'net.ellune.blossom' version '1.0.1'
     id 'com.github.johnrengelman.shadow' version '1.2.3'
 }
@@ -12,7 +11,7 @@ targetCompatibility = '1.8'
 
 group 'io.github.flibio'
 
-defaultTasks 'licenseFormat', 'shadowJar'
+defaultTasks 'shadowJar'
 
 repositories {
     mavenCentral()
@@ -46,28 +45,6 @@ shadowJar {
 
 artifacts {
     archives shadowJar
-}
-
-license {
-
-    // The project properties to use
-    ext.name = project.name
-
-    // The file that contains the license header
-    header file('HEADER.txt')
-
-    // The source sets to apply the license to
-    sourceSets = project.sourceSets
-
-    // Exclude properties files
-    exclude "**/*.properties"
-
-    ignoreFailures false
-    strictCheck true
-
-    mapping {
-        java = 'SLASHSTAR_STYLE'
-    }
 }
 
 task wrapper(type: Wrapper) {
