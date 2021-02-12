@@ -48,8 +48,8 @@ public class PayCommand extends BaseCommandExecutor<Player> {
     public void run(Player src, CommandContext args) {
         if (args.getOne("player").isPresent() && args.getOne("amount").isPresent()) {
             BigDecimal amount = BigDecimal.valueOf(args.<Double>getOne("amount").get());
-            if (amount.intValue() < 1) {
-                src.sendMessage(Text.of(TextColors.RED, "You can't send less than 1 " + ecoService.getDefaultCurrency().getPluralDisplayName().toPlain() + "!"));
+            if (amount.intValue() < 300) {
+                src.sendMessage(Text.of(TextColors.RED, "You can't send less than " + amount.intValue() + " " + ecoService.getDefaultCurrency().getPluralDisplayName().toPlain() + "!"));
                 return;
             }
             double taxpercent = EconomyLite.getConfigManager().getValue(Double.class, "tax-percentage").orElse(15.0);
@@ -106,8 +106,8 @@ public class PayCommand extends BaseCommandExecutor<Player> {
                         src.sendMessage(Text.of(TextColors.GREEN, "You just saved ", TextColors.GOLD, String.format(Locale.ENGLISH, "%,.2f", TaxHelper.GetAmountSaved(rank,taxed)), TextColors.GREEN, " BacoBits due to being a ", TextColors.GOLD, rank, TextColors.GREEN,
                                 " rank owner!"));
                     }
-                    int lottery = new Random().nextInt(50 - 10) + 10;
-                    if (taxed < 10) {
+                    int lottery = new Random().nextInt(5 - 1) + 1;
+                    if (taxed <= 5) {
                         lottery = (int) taxed;
                     }
                     if (lottery > 1 && lottery <= taxed) {
