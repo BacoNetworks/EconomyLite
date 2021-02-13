@@ -49,7 +49,7 @@ public class PayCommand extends BaseCommandExecutor<Player> {
         if (args.getOne("player").isPresent() && args.getOne("amount").isPresent()) {
             BigDecimal amount = BigDecimal.valueOf(args.<Double>getOne("amount").get());
             if (amount.intValue() < 300) {
-                src.sendMessage(Text.of(TextColors.RED, "You can't send less than " + amount.intValue() + " " + ecoService.getDefaultCurrency().getPluralDisplayName().toPlain() + "!"));
+                src.sendMessage(Text.of(TextColors.RED, "You can't send less than 300 " + ecoService.getDefaultCurrency().getPluralDisplayName().toPlain() + "!"));
                 return;
             }
             double taxpercent = EconomyLite.getConfigManager().getValue(Double.class, "tax-percentage").orElse(15.0);
