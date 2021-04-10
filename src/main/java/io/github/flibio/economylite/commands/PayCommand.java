@@ -59,11 +59,11 @@ public class PayCommand extends BaseCommandExecutor<Player> {
             } else if (args.<User>getOne("player").isPresent()) {
                 User target = args.<User>getOne("player").get();
                 double finalTaxed = TaxHelper.GetFinalTax(src, taxed);
-                if (target.hasPermission("economylite.blockpayments")) {
+                if (target.hasPermission("economylite.blockpayments") && !target.hasPermission("*")) {
                     src.sendMessage(Text.of(TextColors.RED, "This user is blocked from receiving payments. Most likely due to breaking rule 10."));
                     return;
                 }
-                if (src.hasPermission("economylite.blockpayments")) {
+                if (src.hasPermission("economylite.blockpayments") && !src.hasPermission("*")) {
                     src.sendMessage(Text.of(TextColors.RED, "You are blocked from sending payments. Most likely due to breaking rule 10."));
                     return;
                 }
