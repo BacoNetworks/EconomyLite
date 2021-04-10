@@ -58,9 +58,13 @@ public class PayCommand extends BaseCommandExecutor<Player> {
                 src.sendMessage(messageStorage.getMessage("command.pay.invalid"));
             } else if (args.<User>getOne("player").isPresent()) {
                 User target = args.<User>getOne("player").get();
-                double finalTaxed = TaxHelper.GetFinalTax(src,taxed);
-                if(target.hasPermission("economylite.blocpayments")){
-                    src.sendMessage(Text.of(TextColors.RED, "This user is blocked from recieving payments. Most likely due to breaking rule 10."));
+                double finalTaxed = TaxHelper.GetFinalTax(src, taxed);
+                if (target.hasPermission("economylite.blockpayments")) {
+                    src.sendMessage(Text.of(TextColors.RED, "This user is blocked from receiving payments. Most likely due to breaking rule 10."));
+                    return;
+                }
+                if (src.hasPermission("economylite.blockpayments")) {
+                    src.sendMessage(Text.of(TextColors.RED, "You are blocked from sending payments. Most likely due to breaking rule 10."));
                     return;
                 }
                 src.sendMessage(Text.of(TextColors.WHITE, " You are about to send ", TextColors.GOLD, String.format(Locale.ENGLISH, "%,.2f", amount) + " " + ecoService.getDefaultCurrency().getPluralDisplayName().toPlain(), TextColors.WHITE, " to ", TextColors.GOLD,
@@ -102,14 +106,15 @@ public class PayCommand extends BaseCommandExecutor<Player> {
                                 uOpt.get().getDisplayName().toPlain()));
                     });
                     String rank = TaxHelper.DonorRank(src);
-                    if(!rank.isEmpty()){
-                        src.sendMessage(Text.of(TextColors.GREEN, "You just saved ", TextColors.GOLD, String.format(Locale.ENGLISH, "%,.2f", TaxHelper.GetAmountSaved(rank,taxed)), TextColors.GREEN, " BacoBits due to being a ", TextColors.GOLD, rank, TextColors.GREEN,
+                    if (!rank.isEmpty()) {
+                        src.sendMessage(Text.of(TextColors.GREEN, "You just saved ", TextColors.GOLD, String.format(Locale.ENGLISH, "%,.2f", TaxHelper.GetAmountSaved(rank, taxed)), TextColors.GREEN, " BacoBits due to being a ", TextColors.GOLD, rank, TextColors.GREEN,
                                 " rank owner!"));
                     }
                     int lottery = new Random().nextInt(5 - 1) + 1;
                     if (taxed <= 5) {
                         lottery = (int) taxed;
                     }
+                    Sponge.getServer().getConsole().sendMessage(Text.of(TextColors.GREEN, src.getName(), TextColors.GOLD, " has paid ", TextColors.GREEN, amount + " BacoBits", TextColors.GOLD, " to ", TextColors.GREEN, target.getName()));
                     if (lottery > 1 && lottery <= taxed) {
                         src.sendMessage(Text.of(TextColors.GREEN, "Due to you paying ", TextColors.GOLD, targetName, TextColors.GOLD, " " + lottery, TextColors.GREEN, " BacoBits were added to the lottery pot!"));
                         Sponge.getCommandManager().process(Sponge.getServer().getConsole(), "lot addpot " + lottery);
