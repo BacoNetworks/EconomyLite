@@ -110,15 +110,10 @@ public class PayCommand extends BaseCommandExecutor<Player> {
                         src.sendMessage(Text.of(TextColors.GREEN, "You just saved ", TextColors.GOLD, String.format(Locale.ENGLISH, "%,.2f", TaxHelper.GetAmountSaved(rank, taxed)), TextColors.GREEN, " BacoBits due to being a ", TextColors.GOLD, rank, TextColors.GREEN,
                                 " rank owner!"));
                     }
-                    int lottery = new Random().nextInt(5 - 1) + 1;
-                    if (taxed <= 5) {
-                        lottery = (int) taxed;
-                    }
+                    int lottery = (int)(taxed*(10/100.0f));
                     Sponge.getServer().getConsole().sendMessage(Text.of(TextColors.GREEN, src.getName(), TextColors.GOLD, " has paid ", TextColors.GREEN, amount + " BacoBits", TextColors.GOLD, " to ", TextColors.GREEN, target.getName()));
-                    if (lottery > 1 && lottery <= taxed) {
-                        src.sendMessage(Text.of(TextColors.GREEN, "Due to you paying ", TextColors.GOLD, targetName, TextColors.GOLD, " " + lottery, TextColors.GREEN, " BacoBits were added to the lottery pot!"));
-                        Sponge.getCommandManager().process(Sponge.getServer().getConsole(), "lot addpot " + lottery);
-                    }
+                    src.sendMessage(Text.of(TextColors.GREEN, "Due to you paying ", TextColors.GOLD, targetName, TextColors.GOLD, " " + lottery, TextColors.GREEN, " BacoBits were added to the lottery pot!"));
+                    Sponge.getCommandManager().process(Sponge.getServer().getConsole(), "lot addpot " + lottery);
                 } else {
                     src.sendMessage(messageStorage.getMessage("command.pay.failed", "target", targetName));
                 }
