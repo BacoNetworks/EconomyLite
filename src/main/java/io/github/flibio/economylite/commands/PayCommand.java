@@ -28,7 +28,6 @@ import org.spongepowered.api.text.format.TextColors;
 import java.math.BigDecimal;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.Random;
 
 @AsyncCommand
 @Command(aliases = {"pay"}, permission = "economylite.pay")
@@ -36,6 +35,7 @@ public class PayCommand extends BaseCommandExecutor<Player> {
 
     private MessageStorage messageStorage = EconomyLite.getMessageStorage();
     private EconomyService ecoService = EconomyLite.getEconomyService();
+    private final String CurrencyName = ecoService.getDefaultCurrency().getPluralDisplayName().toPlain();
 
     @Override
     public Builder getCommandSpecBuilder() {
@@ -67,10 +67,17 @@ public class PayCommand extends BaseCommandExecutor<Player> {
                     src.sendMessage(Text.of(TextColors.RED, "You are blocked from sending payments. Most likely due to breaking rule 10."));
                     return;
                 }
-                src.sendMessage(Text.of(TextColors.WHITE, " You are about to send ", TextColors.GOLD, String.format(Locale.ENGLISH, "%,.2f", amount) + " " + ecoService.getDefaultCurrency().getPluralDisplayName().toPlain(), TextColors.WHITE, " to ", TextColors.GOLD,
-                        target.getName(), TextColors.WHITE, " and are being taxed an additional ", TextColors.GOLD, String.format(Locale.ENGLISH, "%,.2f", finalTaxed) + " " + ecoService.getDefaultCurrency().getPluralDisplayName().toPlain(), TextColors.WHITE, " for the transfer. As such the total amount being deducted from " +
-                                "your account will be ", TextColors.GOLD, String.format(Locale.ENGLISH, "%,.2f", amount.doubleValue() + finalTaxed) + " " + ecoService.getDefaultCurrency().getPluralDisplayName().toPlain(),
-                        TextColors.WHITE, ". Please confirm by clicking below!"));
+                int lottery = (int) (finalTaxed * (10 / 100.0f));
+                String rank = TaxHelper.DonorRank(src);
+                String added = "";
+                if (!rank.isEmpty()) {
+                    added = " (" + TaxHelper.PercentOff(rank) + "% off due to you having " + rank + ")";
+                }
+                src.sendMessage(Text.of(TextColors.WHITE, " You are about to send ", TextColors.GOLD, String.format(Locale.ENGLISH, "%,.2f", amount) + " " + CurrencyName, TextColors.WHITE, " to ", TextColors.GOLD,
+                        target.getName(), TextColors.WHITE, " and are being taxed an additional ", TextColors.GOLD, String.format(Locale.ENGLISH, "%,.2f", finalTaxed) + " " + CurrencyName, TextColors.WHITE, added + " " +
+                                "for the transfer. As such the total amount being deducted from your account will be ", TextColors.GOLD,
+                        String.format(Locale.ENGLISH, "%,.2f", amount.doubleValue() + finalTaxed) + " " + CurrencyName, TextColors.WHITE, ". Due to your transaction ",
+                        TextColors.GOLD, lottery + " " + CurrencyName, TextColors.WHITE, " will be added to the lottery. Please confirm by clicking below!"));
                 src.sendMessage(TextUtils.yesOrNo(c -> {
                     pay(target, amount, src, finalTaxed);
                 }, c -> {
@@ -105,14 +112,15 @@ public class PayCommand extends BaseCommandExecutor<Player> {
                                 String.format(Locale.ENGLISH, "%,.2f", amount) + " " + curLabel.toPlain(), "sender",
                                 uOpt.get().getDisplayName().toPlain()));
                     });
+                    /*
                     String rank = TaxHelper.DonorRank(src);
                     if (!rank.isEmpty()) {
                         src.sendMessage(Text.of(TextColors.GREEN, "You just saved ", TextColors.GOLD, String.format(Locale.ENGLISH, "%,.2f", TaxHelper.GetAmountSaved(rank, taxed)), TextColors.GREEN, " BacoBits due to being a ", TextColors.GOLD, rank, TextColors.GREEN,
                                 " rank owner!"));
-                    }
-                    int lottery = (int)(taxed*(10/100.0f));
+                    }*/
+                    int lottery = (int) (taxed * (10 / 100.0f));
                     Sponge.getServer().getConsole().sendMessage(Text.of(TextColors.GREEN, src.getName(), TextColors.GOLD, " has paid ", TextColors.GREEN, amount + " BacoBits", TextColors.GOLD, " to ", TextColors.GREEN, target.getName()));
-                    src.sendMessage(Text.of(TextColors.GREEN, "Due to you paying ", TextColors.GOLD, targetName, TextColors.GOLD, " " + lottery, TextColors.GREEN, " BacoBits were added to the lottery pot!"));
+                    //src.sendMessage(Text.of(TextColors.GREEN, "Due to you paying ", TextColors.GOLD, targetName, TextColors.GOLD, " " + lottery, TextColors.GREEN, " BacoBits were added to the lottery pot!"));
                     Sponge.getCommandManager().process(Sponge.getServer().getConsole(), "lot addpot " + lottery);
                 } else {
                     src.sendMessage(messageStorage.getMessage("command.pay.failed", "target", targetName));

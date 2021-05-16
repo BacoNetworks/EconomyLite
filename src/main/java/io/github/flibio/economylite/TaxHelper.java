@@ -46,4 +46,17 @@ public class TaxHelper {
         }
         return "";
     }
+
+    public static int PercentOff(String group) {
+        if (group.equalsIgnoreCase("Mythical")) {
+            return 25;
+        }
+        if (group.equalsIgnoreCase("Supreme")) {
+            return 10;
+        }
+        if (group.equalsIgnoreCase("VIP+")) {
+            return 5;
+        }
+        return 0;
+    }
 }
